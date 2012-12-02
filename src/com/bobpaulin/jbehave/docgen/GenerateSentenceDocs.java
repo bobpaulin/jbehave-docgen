@@ -33,22 +33,22 @@ public class GenerateSentenceDocs {
 		Map<String, List<SentenceData>> jbehaveSentenceMap = new HashMap<String, List<SentenceData>>();
 		CompilationUnit jbhaveSentenceJavaCompilationUnit = readCompilationUnitFromFile(
 				f, jbehaveSentenceMap);
-		new MethodVisitor().visit(jbhaveSentenceJavaCompilationUnit,
+		new JbehaveSentenceVisitor().visit(jbhaveSentenceJavaCompilationUnit,
 				jbehaveSentenceMap);
 		writeOutputToFile(outputFile, jbehaveSentenceMap);
 	}
 
-	public static CompilationUnit readCompilationUnitFromFile(File pFile,
+	public static CompilationUnit readCompilationUnitFromFile(File inputFile,
 			Map<String, List<SentenceData>> jbehaveSentenceMap)
 			throws FileNotFoundException, ParseException, IOException {
-		CompilationUnit cu;
-		FileInputStream in = new FileInputStream(pFile);
+		CompilationUnit jbehaveCompilationUnit;
+		FileInputStream in = new FileInputStream(inputFile);
 		try {
-			cu = JavaParser.parse(in);
+			jbehaveCompilationUnit = JavaParser.parse(in);
 		} finally {
 			in.close();
 		}
-		return cu;
+		return jbehaveCompilationUnit;
 	}
 
 	private static void writeOutputToFile(String outputFilePath,
@@ -75,22 +75,22 @@ public class GenerateSentenceDocs {
 	}
 
 	/**
-	 * Simple visitor implementation for visiting MethodDeclaration nodes.
+	 * Simple visitor for reading JBehave Annotations.
 	 */
-	private static class MethodVisitor extends VoidVisitorAdapter {
+	private static class JbehaveSentenceVisitor extends VoidVisitorAdapter {
 
 		@Override
-		public void visit(MethodDeclaration n, Object arg) {
+		public void visit(MethodDeclaration candidateJbehaveSentenceMethod, Object arg) {
 			Map<String, List<SentenceData>> jbehavesentenceMap = (Map<String, List<SentenceData>>) arg;
 
 			String comment = null;
-			if (n.getJavaDoc() != null) {
-				comment = n.getJavaDoc().getContent();
+			if (candidateJbehaveSentenceMethod.getJavaDoc() != null) {
+				comment = candidateJbehaveSentenceMethod.getJavaDoc().getContent();
 			}
 
-			if (n.getAnnotations() != null) {
+			if (candidateJbehaveSentenceMethod.getAnnotations() != null) {
 				String sentenceType = null;
-				for (AnnotationExpr annotation : n.getAnnotations()) {
+				for (AnnotationExpr annotation : candidateJbehaveSentenceMethod.getAnnotations()) {
 
 					if (sentenceType == null)
 						sentenceType = annotation.getName().toString();
